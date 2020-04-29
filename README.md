@@ -2,7 +2,7 @@
 
 An open web-based application to guide the determination of sampling size of farmed salmon for accurate estimation of sea louse abundance
 
-ABSTRACT
+ABSTRACT:
 Sea lice infestation is a major threat to both salmon aquaculture, where the economic impact is devastating, and to wild salmonid conservation where increased parasitic burden may affect population viability. 
 To manage these threats, active surveillance is routinely conducted on salmon farms to estimate the abundance of sea lice. 
 However, the design of efficient sampling schemes for surveillance is challenging as sampling strategies must be consider infestation levels, farm structure, management protocols, as well as the practical logistics of obtaining samples in remote and/or extreme locations. 

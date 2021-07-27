@@ -1,4 +1,4 @@
-server <-function(input, output,session){
+function(input, output,session){
   extract <- function(text) {text <- gsub(" ", "", text); split <- strsplit(text, ",", fixed = FALSE)[[1]]; as.numeric(split)}
   
   kappa=2.19 # dispersion parameter of negative binomial distribution
@@ -26,7 +26,7 @@ server <-function(input, output,session){
     sam.mean[,,i]=colMeans(sam.pen,na.rm=T)}}})
   results.1B<-list(a=choice.1B, b=sam.mean, c=SampleSizePerPen, d=pen.AB)}})
   #######################  OUTPUT 1B: 
-  output$ui.1B.1 <-renderUI({textInput("penAB.1B", "Abundance of Pens", value = NULL, placeholder = 'Use a comma between abundance')})
+  output$ui.1B.1 <-renderUI({textInput("penAB.1B", "(2) Abundance of Pens", value = NULL, placeholder = 'Use a comma between abundance')})
   output$Text.1B.1<-renderText({ABofPen=extract(input$penAB.1B)
   out<-round(sum(ABofPen)/length(ABofPen),2)
   ifelse(length(ABofPen)<1, "NULL", out)})
@@ -45,29 +45,38 @@ server <-function(input, output,session){
   if(input$clustering1B=='no'){  md=melt(results.1B$s) 
   md[,1]=as.numeric(input$TSS.1B)[md[,1]]; md[,1]=as.factor(md[,1]); md[,2]=as.factor(md[,2])
   colnames(md)=c("NumberOfTotalSampledFish","Iteration","Abundance")
-  ggplot(md,aes(x=Abundance,y=NumberOfTotalSampledFish))+geom_density_ridges()+geom_vline(xintercept=input$ab.1B)+geom_vline(xintercept=c(input$u.m,input$l.m),colour=c("green"), linetype = "dashed")+ylab(ifelse(length(as.numeric(input$TSS.1B))==1,"Density","Total number of sampled fish"))+theme(text=element_text(size=18))+theme(axis.text.x=element_text(face="bold",size=18),axis.text.y = element_text(face="bold",size=18))
-  } else {md=melt(results.1B$b)
-  md[,1]=as.numeric(input$choice.1B)[md[,1]]; md[,1]=as.factor(md[,1]); md[,2]=as.numeric(input$TSS.1B)[md[,2]]; md[,2]=as.factor(md[,2]); md[,3]=as.factor(md[,3])
-  colnames(md)=c("NumberOfSampledPens","NumberOfTotalSampledFish","Iteration","Abundance")
-  ggplot(md, aes(x=Abundance,y=NumberOfSampledPens))+geom_density_ridges()+facet_wrap(~NumberOfTotalSampledFish)+theme(legend.position="bottom",legend.title=element_text("Number of sampled pens",size=18,face="bold"))+ggtitle("Total number of sampled fish")+ylab(ifelse(length(as.numeric(input$choice.1B))==1,"Density","Number of sampled pens"))+theme(plot.title = element_text(size=18), text=element_text(size=18))+theme(axis.text.x=element_text(face="bold",size=18),axis.text.y=element_text(face="bold",size=18))+geom_vline(xintercept=mean(extract(input$penAB.1B)))+geom_vline(xintercept=c(input$u.m,input$l.m),colour=c("green"),linetype="dashed")}})
+  ggplot(md,aes(x=Abundance,y=NumberOfTotalSampledFish))+geom_density_ridges()+geom_vline(xintercept=input$ab.1B)+
+    geom_vline(xintercept=c(input$u.m,input$l.m),colour=c("green"), linetype = "dashed")+ylab(ifelse(length(as.numeric(input$TSS.1B))==1,"Density","Total number of sampled fish"))+
+    theme(text=element_text(size=18))+theme(axis.text.x=element_text(face="bold",size=18),axis.text.y = element_text(face="bold",size=18))
+  } else {
+    md=melt(results.1B$b)
+    md[,1]=as.numeric(input$choice.1B)[md[,1]]; md[,1]=as.factor(md[,1]); md[,2]=as.numeric(input$TSS.1B)[md[,2]]; md[,2]=as.factor(md[,2]); md[,3]=as.factor(md[,3])
+    colnames(md)=c("NumberOfSampledPens","NumberOfTotalSampledFish","Iteration","Abundance")
+    ggplot(md, aes(x=Abundance,y=NumberOfSampledPens))+geom_density_ridges()+facet_wrap(~NumberOfTotalSampledFish)+theme(legend.position="bottom",legend.title=element_text("Number of sampled pens",size=18,face="bold"))+ggtitle("Total number of sampled fish")+ylab(ifelse(length(as.numeric(input$choice.1B))==1,"Density","Number of sampled pens"))+theme(plot.title = element_text(size=18), text=element_text(size=18))+theme(axis.text.x=element_text(face="bold",size=18),axis.text.y=element_text(face="bold",size=18))+geom_vline(xintercept=mean(extract(input$penAB.1B)))+geom_vline(xintercept=c(input$u.m,input$l.m),colour=c("green"),linetype="dashed")}})
   output$Plot.1B.3<-renderPlot({plo.1B.3()})
   
   dataset.1<-eventReactive(input$goButton.1B,{results.1B<-mydata.1B()
   if(input$clustering1B=='no'){
     CI=matrix(NA,length(as.numeric(input$TSS.1B)),1)
-    for(s in 1:length(as.numeric(input$TSS.1B))){CI[s]=round(mean(results.1B$s[s,]<input$u.m & results.1B$s[s,]>input$l.m),2)}
-    colnames(CI)="Probability"; rownames(CI)=paste("Total Sample Size",as.numeric(input$TSS.1B))   
+    for(s in 1:length(as.numeric(input$TSS.1B))){CI[s]=paste(round(mean(results.1B$s[s,]<input$u.m & results.1B$s[s,]>input$l.m),2),"(",sum(results.1B$s[s,]<input$u.m & results.1B$s[s,]>input$l.m),"/",input$iteration.1B,")")}
+    CI=matrix(CI[nrow(CI):1,],ncol=1)
+    colnames(CI)="Probability"; rownames(CI)=rev(paste("Total Sample Size",as.numeric(input$TSS.1B)))   
     CI} else {CI=matrix(NA,length(as.numeric(input$TSS.1B)),length(as.numeric(input$choice.1B)))
-    for(s in 1:length(as.numeric(input$TSS.1B))){for(t in 1:length(as.numeric(input$choice.1B))){CI[s,t]=round(mean(results.1B$b[t,s,]<input$u.m & results.1B$b[t,s,]>input$l.m),2)}}
+    for(s in 1:length(as.numeric(input$TSS.1B))){for(t in 1:length(as.numeric(input$choice.1B))){
+      CI[s,t]=paste(round(mean(results.1B$b[t,s,]<input$u.m & results.1B$b[t,s,]>input$l.m),2),"(",sum(results.1B$b[t,s,]<input$u.m & results.1B$b[t,s,]>input$l.m),"/",input$iteration.1B,")")
+    }}
     colnames(CI)=paste("Number of sampled pens",as.numeric(input$choice.1B))
     rownames(CI)=paste("Total number of sampled fish",as.numeric(input$TSS.1B))
-    CI}})
+    format(CI,justify = c("right")); t(CI[,ncol(CI):1])
+    }})
   output$Table.1B.1 <- renderTable({data.frame(dataset.1())},rownames = TRUE)
   
   tt.1<-eventReactive(input$goButton.1B, {results.1B<-mydata.1B()
   SSperPen=format(results.1B$c)
-  colnames(SSperPen)=c(paste("Number of sampled pens",as.numeric(input$choice.1B)[1]),as.numeric(input$choice.1B)[-1]);
-  rownames(SSperPen)=paste("Total number of sampled fish",as.numeric(input$TSS.1B)); format(SSperPen,justify = c("right")); print(SSperPen)})
+  colnames(SSperPen)=paste("Number of sampled pens",as.numeric(input$choice.1B))
+  rownames(SSperPen)=paste("Total number of sampled fish",as.numeric(input$TSS.1B))
+  format(SSperPen,justify = c("right")); t(SSperPen[,ncol(SSperPen):1])
+  })
   output$TT.1<-renderTable({tt.1()},rownames = TRUE)
   
   ################################################## Scenario 2
@@ -96,9 +105,9 @@ server <-function(input, output,session){
         for(p in pp){sam.pen[p,c,s]=mean(sample(rnbinom(fish,size=kappa,mu=pen.AB[p,a]),SampleSizePerPen[s,c]))}}}
         sam.mean[,,i,a]=colMeans(sam.pen,na.rm=T)}}}}) # withProgress
       results.2B<- list(a=sam.mean,b=SampleSizePerPen)}})
-  
-  output$ui.2B.1 <-renderUI({textInput("penAB1.2B", "Abundance1 of Pens", value = NULL, placeholder = 'Use a comma between abundance')})
-  output$ui.2B.2 <-renderUI({textInput("penAB2.2B", "Abundance2 of Pens (Abundance of Interest)", value = NULL, placeholder = 'Use a comma between abundance')})
+  #######################  OUTPUT 2B: 
+  output$ui.2B.1 <-renderUI({textInput("penAB1.2B", "(2-1) Abundance1 of Pens", value = NULL, placeholder = 'Use a comma between abundance')})
+  output$ui.2B.2 <-renderUI({textInput("penAB2.2B", "(2-2) Abundance2 of Pens (Abundance of Interest)", value = NULL, placeholder = 'Use a comma between abundance')})
   output$Text.2B.1<-renderText({out<-round(sum(extract(input$penAB1.2B))/length(extract(input$penAB1.2B)),2); ifelse(length(extract(input$penAB1.2B))<1, "NULL", out)})
   output$Text.2B.2<-renderText({out<-round(sum(extract(input$penAB2.2B))/length(extract(input$penAB2.2B)),2); ifelse(length(extract(input$penAB2.2B))<1, "NULL", out)})
   output$Text.2B.3<-renderText({validate(need(input$penAB1.2B, ""))
@@ -115,30 +124,40 @@ server <-function(input, output,session){
     plot(pen.AB,main="Abundance2", xlab="Pen number",ylab="Abundance",ylim=c(0,max(pen.AB)),cex=1.5,las=1); abline(h=mean(pen.AB),lty=2)})
   
   plo.2B.3<-eventReactive(input$goButton.2B, {results.2B<-mydata.2B()
-  if(input$clustering2B=='no'){dt=melt(results.2B$h); dt[,1]=as.numeric(input$TSS.2B)[dt[,1]]
-  dt[,3]=ifelse(dt[,3]==1,"Abundance1","Abundance2")
-  colnames(dt)=c("NumberOfTotalSampledFish","Iteration","ABUNDANCE","Abundance")
-  ggplot(dt, aes(x=Abundance,colour=ABUNDANCE))+scale_color_manual(values=c('red','blue'))+geom_density(aes(group=ABUNDANCE),alpha=0.25)+facet_wrap(~NumberOfTotalSampledFish)+ggtitle("Total number of sampled fish")+theme(plot.title = element_text(size=18))+geom_vline(xintercept =c(input$ab1.2B,input$ab2.2B), linetype = "dashed", colour = rep(c(2,4),length(table(dt[,1]))))+ylab("Density")+theme(legend.position="bottom",text=element_text(size=18),axis.text.x=element_text(face="bold",size=18),axis.text.y=element_text(face="bold",size=18))} else {dt=melt(results.2B$a); dt[,1]=as.numeric(input$choice.2B)[dt[,1]]; dt[,2]=as.numeric(input$TSS.2B)[dt[,2]]; dt[,4]=ifelse(dt[,4]==1,"Abundance1","Abundance2")
-  colnames(dt)=c("NumberOfSampledPens","NumberOfTotalSampledFish","Iteration","ABUNDANCE","Abundance")
-  ggplot(dt,aes(x=Abundance,colour=ABUNDANCE))+scale_color_manual(values=c('red','blue'))+geom_density(aes(group=ABUNDANCE),alpha=0.25)+facet_grid(NumberOfTotalSampledFish~NumberOfSampledPens)+ggtitle("Number of sampled pens")+theme(plot.title = element_text(size=18))+geom_vline(xintercept=c(mean(extract(input$penAB1.2B)),mean(extract(input$penAB2.2B))),linetype="dashed",colour=rep(c(2,4),length(table(dt[,2]))*length(table(dt[,1]))))+ylab("Density")+theme(legend.position="bottom",text=element_text(size=18),axis.text.x=element_text(face="bold",size=18),axis.text.y=element_text(face="bold",size=18))}})
+  if(input$clustering2B=='no'){
+    dt=melt(results.2B$h); dt[,1]=as.numeric(input$TSS.2B)[dt[,1]]
+    dt[,3]=ifelse(dt[,3]==1,"Abundance1","Abundance2")
+    colnames(dt)=c("NumberOfTotalSampledFish","Iteration","ABUNDANCE","Abundance")
+    ggplot(dt, aes(x=Abundance,colour=ABUNDANCE))+scale_color_manual(values=c('red','blue'))+geom_density(aes(group=ABUNDANCE),alpha=0.25)+facet_wrap(~NumberOfTotalSampledFish)+ggtitle("Total number of sampled fish")+theme(plot.title = element_text(size=18))+geom_vline(xintercept =c(input$ab1.2B,input$ab2.2B), linetype = "dashed", colour = rep(c(2,4),length(table(dt[,1]))))+ylab("Density")+theme(legend.position="bottom",text=element_text(size=18),axis.text.x=element_text(face="bold",size=18),axis.text.y=element_text(face="bold",size=18))+guides(col=guide_legend(""))
+  } else {
+    dt=melt(results.2B$a); dt[,1]=as.numeric(input$choice.2B)[dt[,1]]; dt[,2]=as.numeric(input$TSS.2B)[dt[,2]]; dt[,4]=ifelse(dt[,4]==1,"Abundance1","Abundance2")
+    colnames(dt)=c("NumberOfSampledPens","NumberOfTotalSampledFish","Iteration","ABUNDANCE","Abundance")
+    ggplot(dt,aes(x=Abundance,colour=ABUNDANCE))+scale_color_manual(values=c('red','blue'))+geom_density(aes(group=ABUNDANCE),alpha=0.25)+
+      facet_grid(NumberOfSampledPens~NumberOfTotalSampledFish)+ggtitle("Total number of sampled fish")+theme(plot.title = element_text(size=18))+
+      geom_vline(xintercept=c(mean(extract(input$penAB1.2B)),mean(extract(input$penAB2.2B))),linetype="dashed",colour=rep(c(2,4),length(table(dt[,2]))*length(table(dt[,1]))))+ylab("Density")+
+      theme(legend.position="bottom",text=element_text(size=18),axis.text.x=element_text(face="bold",size=18),axis.text.y=element_text(face="bold",size=18))+guides(col=guide_legend(""))}})
   output$Plot.2B.3<-renderPlot({plo.2B.3()})
   
   dataset.2<-eventReactive(input$goButton.2B,{results.2B<-mydata.2B()
   if(input$clustering2B=='no'){abc=matrix(NA,length(as.numeric(input$TSS.2B)),1)
-  for(s in 1:length(as.numeric(input$TSS.2B))){abc[s]=ifelse(input$ab1.2B<input$ab2.2B, mean(results.2B$h[s,,1]<results.2B$h[s,,2]), mean(results.2B$h[s,,1]>results.2B$h[s,,2]))}
+  for(s in 1:length(as.numeric(input$TSS.2B))){abc[s]=ifelse(input$ab1.2B<input$ab2.2B,
+                                                             paste(round(mean(results.2B$h[s,,1]<results.2B$h[s,,2]),2),"(",sum(results.2B$h[s,,1]<results.2B$h[s,,2]),"/",input$iteration.2B,")"),
+                                                             paste(round(mean(results.2B$h[s,,1]>results.2B$h[s,,2]),2),"(",sum(results.2B$h[s,,1]>results.2B$h[s,,2]),"/",input$iteration.2B,")"))}
   colnames(abc)=c("Probability"); rownames(abc)=paste("Total Sample Size",as.numeric(input$TSS.2B))
   abc} else {abc=matrix(NA,length(as.numeric(input$TSS.2B)),length(as.numeric(input$choice.2B)))
-  for(s in 1:length(as.numeric(input$TSS.2B))){for(c in 1:length(as.numeric(input$choice.2B))){abc[s,c]=ifelse(mean(extract(input$penAB1.2B))<mean(extract(input$penAB2.2B)), mean(results.2B$a[c,s,,1]<results.2B$a[c,s,,2]), mean(results.2B$a[c,s,,1]>results.2B$a[c,s,,2]))}}
-  colnames(abc)=paste("Number of sampled pens",as.numeric(input$choice.2B))
-  rownames(abc)=paste("Total number of sampled fish",as.numeric(input$TSS.2B))
-  abc}})
+  for(s in 1:length(as.numeric(input$TSS.2B))){for(c in 1:length(as.numeric(input$choice.2B))){
+    abc[s,c]=ifelse(mean(extract(input$penAB1.2B))<mean(extract(input$penAB2.2B)), 
+                    paste(round(mean(results.2B$a[c,s,,1]<results.2B$a[c,s,,2]),2),"(",sum(results.2B$a[c,s,,1]<results.2B$a[c,s,,2]),"/",input$iteration.2B,")"), 
+                    paste(round(mean(results.2B$a[c,s,,1]>results.2B$a[c,s,,2]),2),"(",sum(results.2B$a[c,s,,1]>results.2B$a[c,s,,2]),"/",input$iteration.2B,")"))}}
+  colnames(abc)=paste("Number of sampled pens",as.numeric(input$choice.2B)); rownames(abc)=paste("Total number of sampled fish",as.numeric(input$TSS.2B))
+  t(abc)}})
   output$Table.2B.1<-renderTable({data.frame(dataset.2())},rownames = TRUE)
   
   tt.2<-eventReactive(input$goButton.2B, {results.2B<-mydata.2B()
   SSperPen=format(results.2B$b)
   colnames(SSperPen)=paste("Number of sampled pens",as.numeric(input$choice.2B))
   rownames(SSperPen)=paste("Total number of sampled fish",as.numeric(input$TSS.2B))
-  print(SSperPen)})
+  t(SSperPen)})
   output$TT.2<-renderTable({tt.2()},rownames = TRUE)
   
   ############################## Scenario 3
@@ -164,7 +183,7 @@ server <-function(input, output,session){
         sam.mean[s,,i]=colMeans(sam.pen,na.rm=T)}}}})
       results.3B<-list(a=sam.mean,b=SampleSizePerPen)}})
   #######################  OUTPUT 3B: 
-  output$ui.3B.1 <-renderUI({textInput("penAB.3B", "Abundance of Pens", value = NULL, placeholder = 'Use a comma between abundance')})
+  output$ui.3B.1 <-renderUI({textInput("penAB.3B", "(2) Abundance of Pens", value = NULL, placeholder = 'Use a comma between abundance')})
   output$Text.3B.1<-renderText({ABofPen=extract(input$penAB.3B)
   out<-round(sum(ABofPen)/length(ABofPen),2)
   ifelse(length(ABofPen)<1, "NULL", out)})
@@ -188,7 +207,7 @@ server <-function(input, output,session){
   } else {dt=melt(results.3B$a)
   dt[,1]=as.numeric(input$TSS.3B)[dt[,1]]; dt[,2]=as.numeric(input$choice.3B)[dt[,2]]; dt[,2]=as.factor(dt[,2])
   colnames(dt)=c("NumberOfTotalSampledFish","NumberOfSampledPens","Iteration","Abundance")
-  ggplot(dt, aes(x=Abundance, y=NumberOfSampledPens)) +geom_density_ridges()+facet_wrap(~NumberOfTotalSampledFish)+ggtitle("Number of sampled pens")+theme(plot.title = element_text(size=18))+
+  ggplot(dt, aes(x=Abundance, y=NumberOfSampledPens)) +geom_density_ridges()+facet_wrap(~NumberOfTotalSampledFish)+ggtitle("Total number of sampled fish")+theme(plot.title = element_text(size=18))+
     geom_vline(xintercept=mean(extract(input$penAB.3B)))+geom_vline(xintercept=input$th.3B,linetype="dashed",colour="red")+
     ylab(ifelse(length(as.numeric(input$choice.3B))==1,"Density","Number of sampled pens"))+
     theme(legend.position="bottom",legend.title=element_text("Number of sampled pens",size=18,face="bold"))+theme(text=element_text(size=18))+
@@ -198,16 +217,29 @@ server <-function(input, output,session){
   
   dataset.3<-eventReactive(input$goButton.3B,{results.3B<-mydata.3B()
   if(input$clustering3B=='no'){cutline=matrix(NA,length(as.numeric(input$TSS.3B)),1)
-  for(s in 1:length(as.numeric(input$TSS.3B))){cutline[s]=ifelse(input$ab.3B>=input$th.3B,mean(results.3B$d[s,]>=input$th.3B),mean(results.3B$d[s,]<input$th.3B))}
-  colnames(cutline)="Probability"; rownames(cutline)=paste("Total number of sampled fish",as.numeric(input$TSS.3B))
-  cutline} else {cutline=matrix(NA,length(as.numeric(input$TSS.3B)),length(as.numeric(input$choice.3B)))
-  for(c in 1:length(as.numeric(input$choice.3B))){for(s in 1:length(as.numeric(input$TSS.3B))){cutline[s,c]=ifelse(mean(extract(input$penAB.3B))>=input$th.3B,mean(results.3B$a[s,c,]>=input$th.3B),mean(results.3B$a[s,c,]<input$th.3B))}}
+  for(s in 1:length(as.numeric(input$TSS.3B))){
+    cutline[s]=ifelse(input$ab.3B>=input$th.3B,
+                      paste(round(mean(results.3B$d[s,]>=input$th.3B),2),"(",sum(results.3B$d[s,]>=input$th.3B),"/",input$iteration.3B,")"),
+                      paste(round(mean(results.3B$d[s,]<input$th.3B),2),"(",sum(results.3B$d[s,]<input$th.3B),"/",input$iteration.3B,")"))}
+  cutline=matrix(cutline[nrow(cutline):1,],ncol=1)
+  colnames(cutline)="Probability"; rownames(cutline)=rev(paste("Total number of sampled fish",as.numeric(input$TSS.3B)))
+  cutline
+  } else {cutline=matrix(NA,length(as.numeric(input$TSS.3B)),length(as.numeric(input$choice.3B)))
+  for(c in 1:length(as.numeric(input$choice.3B))){for(s in 1:length(as.numeric(input$TSS.3B))){
+    cutline[s,c]=ifelse(mean(extract(input$penAB.3B))>=input$th.3B,
+                        paste(round(mean(results.3B$a[s,c,]>=input$th.3B),2),"(",sum(results.3B$a[s,c,]>=input$th.3B),"/",input$iteration.3B,")"),
+                        paste(round(mean(results.3B$a[s,c,]<input$th.3B),2),"(",sum(results.3B$a[s,c,]<input$th.3B),"/",input$iteration.3B,")"))
+  }}
   colnames(cutline)=paste("Number of sampled pens",as.numeric(input$choice.3B)); rownames(cutline)=paste("Total number of sampled fish",as.numeric(input$TSS.3B))
-  cutline}})
+  format(cutline,justify=c("right"))
+  t(cutline[,ncol(cutline):1])
+  }})
   output$Table.3B.1 <- renderTable({data.frame(dataset.3())},rownames = TRUE)
   tt.3<-eventReactive(input$goButton.3B,{results.3B<-mydata.3B()
   SSperPen=format(results.3B$b)
-  colnames(SSperPen)=c(paste("Number of sampled pens",as.numeric(input$choice.3B)[1]),as.numeric(input$choice.3B)[-1]);
-  rownames(SSperPen)=paste("Total number of sampled fish",as.numeric(input$TSS.3B)); print(SSperPen)})
+  colnames(SSperPen)=paste("Number of sampled pens",as.numeric(input$choice.3B));
+  rownames(SSperPen)=paste("Total number of sampled fish",as.numeric(input$TSS.3B))
+  t(SSperPen[,ncol(SSperPen):1])
+  })
   output$TT.3<-renderTable({tt.3()},rownames = TRUE)
 }

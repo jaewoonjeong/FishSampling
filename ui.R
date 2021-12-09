@@ -11,7 +11,7 @@ fluidPage(
                       strong("Scenario 1. How probable does the estimated abundance through sampling fall within a certain range?"),
                       tags$i("   Example usage: to figure out the overall accuracy of esatimated abundance"),
                       p(""),
-                      strong("Scenario 2. How probable is abundance estimated to be higher than a lice limit?"),
+                      strong("Scenario 2. How probable is abundance estimated to be higher than a certain level of abundance?"),
                       tags$i("   Example usage: to determine if abundance is over the lice limit or treatment threshold"),
                       p(""),
                       strong("Scenario 3. How probable is the relative difference between the two abundances correctly determined?"),
@@ -25,125 +25,92 @@ fluidPage(
                       p("R shiny code is available from here, https://github.com/jaewoonjeong/FishSampling")),
              
              tabPanel(strong("SCENARIO 1"), 
-                      h3("Accuracy of estimated abundance"),
-                      fluidPage(
-                        column(2,radioButtons("clustering1", "Clustering Effect:",c(No = "no", Yes = "yes"))),
-                        column(2,numericInput("iteration1","Iteration",value=100,min=1,max=100000))
-                      ),
-                      conditionalPanel(condition = "input.clustering1 == 'no'",div(HTML("<u><b>Total number of fish (A)</b></u> are sampled from a farm with <u><b>a true abundance of (B)</b></u>. 
-                                                                                         The abundance estimated through this sampling will fall in <u><b>target limits of (F)</b></u> with <b><u>a probability of (OUTPUT)</b></u>."))),
-                      conditionalPanel(condition = "input.clustering1 == 'yes'",div(HTML("<u><b>Total number of fish (A)</b></u> are sampled from a farm consisting of <u><b>(D) pens</b></u> with <u><b>true abundances of (B) in each pen</b></u>. 
-                      The fish are sampled only from <u><b>selected numbers of pens of (C)</b></u>. 
-                                                                                          The abundance estimated through this sampling will fall in <u><b>target limits of (F)</b></u> with <b><u>a probability of (OUTPUT)</b></u>."))),
-                      sidebarLayout(
-                        sidebarPanel(fluidRow(
+                      titlePanel("Accuracy of estimated abundance"),
+                      fluidPage(column(2,radioButtons("clustering1", "Clustering Effect:",c(No = "no", Yes = "yes"))),
+                        column(2,numericInput("iteration1","Iteration",value=10,min=1,max=100000))),
+                      conditionalPanel(condition = "input.clustering1 == 'no'",div(HTML("<b>Total number of fish (A)</b> are sampled from a farm with <b>an assumed true abundance (B)</b>. <b><u>The output is the probability</b></u> that the abundance estimated through this sampling will fall between <b>the lower limit (F1) and upper limit (F2)</b>."))),
+                      conditionalPanel(condition = "input.clustering1 == 'yes'",div(HTML("<b>Total number of fish (A)</b> are sampled from a farm consisting of <b>(D) a certain number of pens</b> with <b>an assumed true abundances (B)</b>. The fish are sampled from <b>selected numbers of pens (C)</b>. <b><u>The output is the probability</b></u> that the abundance estimated through this sampling will fall between <b>the lower limit (F1) and upper limit (F2)</b>."))),
+                      p(""),
+                      sidebarLayout(sidebarPanel(width=4,fluidRow(
                           column(6,
-                                 selectInput("TSS1", "(A) Total number of sampled fish from a farm:",choices = 1:300,selected=c(60),multiple = TRUE),
-                                 numericInput("ab1", "(B) Assumed True Abundance:", value = 3.0, min=0, max=100, step=0.01),
-                                 numericInput("u.m","(F-1) Higher Target Limit:",3.3,min=0,max=10,step=0.01),
-                                 numericInput("l.m","(F-2) Lower Target Limit:",2.7,min=0,max=10,step=0.01)),
+                                 selectInput("TSS1", "(A) Total number of sampled fish from a farm:",choices = 1:300,selected=c(30,60),multiple = TRUE),
+                                 numericInput("ab1", "(B) Assumed True Abundance:", value = 3.0, min=0, max=100, step=0.01)),
                           column(6,
-                                 conditionalPanel(condition = "input.clustering1 == 'yes'",selectInput("choice1", "(C) Numbers of selected pens for sampling:", choices =1:20,selected=c(3,5,10), multiple = TRUE)),
+                                 conditionalPanel(condition = "input.clustering1 == 'yes'",selectInput("choice1", "(C) Numbers of selected pens for sampling:", choices =1:20,selected=c(3,10), multiple = TRUE)),
                                  conditionalPanel(condition = "input.clustering1 == 'yes'",sliderInput("pen1", "(D) Total Number of pens in a farm:", value=10, min=2, max=20)),
-                                 conditionalPanel(condition = "input.clustering1 == 'yes'",sliderInput("icc1", "(E) ICC:", value=0.25, min=0, max=0.35,step = 0.01)))),
-                          conditionalPanel(condition = "input.clustering1 == 'yes'",plotOutput("Plot.1B.2")),
-                          conditionalPanel(condition = "input.clustering1 == 'yes'",h4(""))),
+                                 conditionalPanel(condition = "input.clustering1 == 'yes'",sliderInput("icc1", "(E) ICC:", value=0.01, min=0.01, max=0.35,step = 0.01)))),
+                          fluidRow(
+                            column(6,numericInput("l.m","(F1) Lower Limit:",2.7,min=0,max=10,step=0.01)),
+                          column(6,numericInput("u.m","(F2) Upper Limit:",3.3,min=0,max=10,step=0.01)),
+                          conditionalPanel(condition = "input.clustering1 == 'yes'",plotOutput("Plot.1B.2", height = "300px")),
+                          conditionalPanel(condition = "input.clustering1 == 'yes'",h4("")))),
                         mainPanel(
                           actionButton("goButton1", "Go!", class = "btn-primary"),
-                          h4(""),
-                          h4("Table 1.1. Probability of estimating the abundance between two target limits"),
-                          useShinyalert(),  # Set up shinyalert
-                          actionButton("btn1.1", "?"),
-                          tableOutput("Table.1.1"),
-                          h4(""),
-                          conditionalPanel(condition = "input.clustering1 == 'yes'",h4("Table 1.2. Number of sampled fish per pen")),
-                          conditionalPanel(condition = "input.clustering1 == 'yes'",
-                                           useShinyalert(),  # Set up shinyalert
-                                           actionButton("btn1.2", "?")),
-                          conditionalPanel(condition = "input.clustering1 == 'yes'",tableOutput("Table.1.2")),
-                          h4(""),
-                          plotOutput("Plot1"),
-                          h4("Figure 1. Distribution of abundance"),
-                          useShinyalert(),  # Set up shinyalert
-                          actionButton("btn1.3", "?")))),
+                          h1(""),
+                          conditionalPanel(condition = "input.clustering1 == 'no'",div(HTML("<b><u>Probability of estimating the abundance between the lower and upper limits </b></u>"))),
+                          conditionalPanel(condition = "input.clustering1 == 'yes'",div(HTML("<b><u>Probability of estimating the abundance between the lower and upper limits </b></u>and<i> (Number of sampled fish per pen)</i>"))),
+                          h1(""),
+                          htmlOutput("Table.1.1"),conditionalPanel(condition = "input.clustering1 == 'yes'",useShinyalert(), actionButton("btn1.2", "?")),
+                          h1(""),
+                          plotOutput("Plot1"),useShinyalert(),actionButton("btn1.3", "?")))),
              
              tabPanel(strong("SCENARIO 2"), 
-                      h3("Comparison of an estimated abundance with a certain level of abundance"),
-                      fluidPage(
-                        column(2,radioButtons("clustering3", "Clustering Effect:",c(No = "no", Yes = "yes"))),
-                        column(2,numericInput("iteration3","Iteration",value=100,min=1,max=100000))),
-                      conditionalPanel(condition = "input.clustering3 == 'no'",div(HTML("<u><b>Total number of fish (A)</b></u> are sampled from a farm with <u><b>a true abundance of (B)</b></u>. The estimated abundance is higher than <u><b>a certain level of abundance (F)</b></u> with <u><b>a probability of (OUTPUT)</b></u>."))),
-                      conditionalPanel(condition = "input.clustering3 == 'yes'",div(HTML("<u><b>Total number of fish (A)</b></u> are sampled from a farm consisting of <u><b>(D) pens</b></u> with <u><b>true abundance of (B) in each pen</b></u>. The fish are sampled only from selected numbers of <u><b>pens of (C)</b></u>. 
-                                                                                          The estimated abundance is higher than <u><b>a certain level of abundance (F)</b></u> with <u><b>a probability of (OUTPUT)</b></u>."))),
-                      sidebarLayout(
-                        sidebarPanel(fluidRow(
+                      titlePanel("Comparison of an estimated abundance with a certain level of abundance"),
+                      fluidPage(column(2,radioButtons("clustering3", "Clustering Effect:",c(No = "no", Yes = "yes"))),
+                        column(2,numericInput("iteration3","Iteration",value=10,min=1,max=100000))),
+                      conditionalPanel(condition = "input.clustering3 == 'no'",div(HTML("<b>Total number of fish (A)</b> are sampled from a farm with <b>an assumed true abundance (B)</b>. <b><u>The output is the probability</b></u> that the abundance estimated through this sampling will be higher than <b>a certain level of abundance (F)</b>."))),
+                      conditionalPanel(condition = "input.clustering3 == 'yes'",div(HTML("<b>Total number of fish (A)</b> are sampled from a farm consisting of <b>(D) a certain number of pens</b> with <b>an assumed true abundance (B)</b>. The fish are sampled from <b>selected numbers of pens (C)</b>. <b><u>The output is the probability</b></u> that the abundance estimated through this sampling will be higher than <b>a certain level of abundance (F)</b>."))),
+                      p(""),
+                      sidebarLayout(sidebarPanel(fluidRow(
                           column(6,
-                                 selectInput("TSS3", "(A) Total number of  fish to sample from a farm:",choices = 1:300,selected=c(60),multiple = TRUE),
+                                 selectInput("TSS3", "(A) Total number of  fish to sample from a farm:",choices = 1:300,selected=c(30,60),multiple = TRUE),
                                  numericInput("ab3", "(B) Assumed True Abundance:", value =2.6, min=0, max=10, step=0.01),
                                  numericInput("th3","(F) Certain level of abundance:",value=3,min=0,max=10,step=0.01)),
                           column(6,
-                                 conditionalPanel(condition = "input.clustering3 == 'yes'",selectInput("choice3", "(C) Numbers of selected pens for sampling:",choices =1:20,selected=c(3,5,10),multiple = TRUE)),
+                                 conditionalPanel(condition = "input.clustering3 == 'yes'",selectInput("choice3", "(C) Numbers of selected pens for sampling:",choices =1:20,selected=c(3,10),multiple = TRUE)),
                                  conditionalPanel(condition = "input.clustering3 == 'yes'",sliderInput("pen3", "(D) Number of pens in a farm:", value=10, min=2, max=20)),
-                                 conditionalPanel(condition = "input.clustering3 == 'yes'",sliderInput("icc3", "(E) ICC:", value=0.25, min=0, max=0.35,step = 0.01)))),
-                          conditionalPanel(condition = "input.clustering3 == 'yes'",plotOutput("Plot.3B.2")),
+                                 conditionalPanel(condition = "input.clustering3 == 'yes'",sliderInput("icc3", "(E) ICC:", value=0.01, min=0.01, max=0.35,step = 0.01)))),
+                          conditionalPanel(condition = "input.clustering3 == 'yes'",plotOutput("Plot.3B.2", height = "300px")),
                           conditionalPanel(condition = "input.clustering3 == 'yes'",h4(""))),
                         mainPanel(
                           actionButton("goButton3", "Go!", class = "btn-primary"),
-                            h4("Table 2.1. Probability of estimating abundance higher than a certain level of abundance"),
-                            useShinyalert(), 
-                            actionButton("btn2.1", "?"),
-                            tableOutput("Table.3.1"),
-                          conditionalPanel(condition = "input.clustering3 == 'yes'",h4("Table 2.2. Number of sampled fish per pen")),
-                          conditionalPanel(condition = "input.clustering3 == 'yes'",
-                                           useShinyalert(),  # Set up shinyalert
-                                           actionButton("btn2.2", "?")),
-                          conditionalPanel(condition = "input.clustering3 == 'yes'",tableOutput("Table.3.2")),
-                    plotOutput("Plot3"),
-                          h4("Figure 2. Distribution of abundance"),
-                          useShinyalert(),  # Set up shinyalert
-                          actionButton("btn2.3", "?")))),
+                          h1(""),
+                          conditionalPanel(condition = "input.clustering3 == 'no'",div(HTML("<b><u>Probability of estimating abundance higher than the certain level of abundance </b></u>"))),
+                          conditionalPanel(condition = "input.clustering3 == 'yes'",div(HTML("<b><u>Probability of estimating abundance higher than the certain level of abundance </b></u>and<i> (Number of sampled fish per pen)</i>"))),
+                          h1(""),
+                          htmlOutput("Table.3.1"),conditionalPanel(condition = "input.clustering3 == 'yes'",useShinyalert(),   actionButton("btn2.2", "?")),
+                          h1(""),
+                          plotOutput("Plot3"),useShinyalert(),  actionButton("btn2.3", "?")))),
              
              tabPanel(strong("SCENARIO 3"), 
-                      h3("Comparison of two abundances"),
-                      fluidPage(
-                        column(2, radioButtons("clustering2", "Clustering Effect:",c(No = "no", Yes = "yes"))),
-                        column(2, numericInput("iteration2","Iteration",value=100,min=1,max=100000))
-                      ),
-                      conditionalPanel(condition = "input.clustering2 == 'no'",div(HTML("<u><b>Total number of fish (A)</b></u> are sampled from each of the two farms with <u><b>true abundances of (B) and (F) </b></u>. 
-                                                                                         The relative level of the two abundances estimated through this sampling will be correctly determined with <u><b>a probability of (OUTPUT)</b></u>."))),
-                      conditionalPanel(condition = "input.clustering2 == 'yes'",div(HTML("<u><b>Total number of fish (A)</b></u> are sampled from a farm consisting of <u><b>(D) pens</b></u> with <u><b>true abundances of (B) and (F) in each pen</b></u>. 
-                                                                                          The fish are sampled only from selected numbers of <u><b>pens of (C)</b></u>. 
-                                                                                          The relative level of the two abundances estimated through this sampling will be correctly determined with <u><b>a probability of (OUTPUT)</b></u>."))),
-                      sidebarLayout(
-                        sidebarPanel(fluidRow(
+                      titlePanel("Comparison of two abundances"),
+                      fluidPage(column(2, radioButtons("clustering2", "Clustering Effect:",c(No = "no", Yes = "yes"))),
+                        column(2, numericInput("iteration2","Iteration",value=10,min=1,max=100000))),
+                      conditionalPanel(condition = "input.clustering2 == 'no'",div(HTML("<b>Total number of fish (A)</b> are sampled from each of two farms with <b>assumed true abundances (B) and (F)</b>. <b><u>The output is the probability</b></u> that this sampling will determine that a lower abundance is lower than a higher abundance."))),
+                      conditionalPanel(condition = "input.clustering2 == 'yes'",div(HTML("<b>Total number of fish (A)</b> are sampled from each of two farms consisting of <b>(D) a certain number of pens</b> with <b>assumed true abundances (B) and (F)</b>. The fish are sampled from <b> selected numbers of pens (C)</b>. <b><u>The output is the probability</b></u> that the abundance estimated through this sampling will be higher than <b>a certain level of abundance (F)</b>."))),
+                      p(""),
+                      sidebarLayout(sidebarPanel(fluidRow(
                           column(6,
-                                 selectInput("TSS2","(A) Total number of sampled fish from each farm:",choices=1:300,selected=c(60),multiple=TRUE),
-                                 numericInput("ab1.2B", "(B) Assumed True Abundance1:", value =2.6, min=0, max=10, step=0.01),
-                                 numericInput("ab2.2B", "(F) Assumed True Abundance2:", value =3.0, min=0, max=10, step=0.01)),
+                                 selectInput("TSS2","(A) Total number of sampled fish from each farm:",choices=1:300,selected=c(30,60),multiple=TRUE),
+                                 numericInput("ab1.2B", "(B) Assumed True (Lower) Abundance1:", value =2.6, min=0, max=10, step=0.01),
+                                 numericInput("ab2.2B", "(F) Assumed True (Higher) Abundance2:", value =3.0, min=0, max=10, step=0.01)),
                           column(6,
-                                 conditionalPanel(condition = "input.clustering2 == 'yes'",selectInput("choice2", "(C) Numbers of selected pens for sampling:", choices =1:20,selected=c(3,5,10), multiple = TRUE)),
+                                 conditionalPanel(condition = "input.clustering2 == 'yes'",selectInput("choice2", "(C) Numbers of selected pens for sampling:", choices =1:20,selected=c(3,10), multiple = TRUE)),
                                  conditionalPanel(condition = "input.clustering2 == 'yes'",sliderInput("pen2", "(D) Total Number of pens in a farm:", value=10, min=2, max=20)),
-                                 conditionalPanel(condition = "input.clustering2 == 'yes'",sliderInput("icc1.2B", "(E-1) ICC1:", value=0.25, min=0, max=0.35,step = 0.01)),
-                                 conditionalPanel(condition = "input.clustering2 == 'yes'",sliderInput("icc2.2B", "(E-2) ICC2:", value=0.25, min=0, max=0.35,step = 0.01))),
-                          column(11,
-                                 conditionalPanel(condition = "input.clustering2 == 'yes'",plotOutput("Plot.2B.1")),
-                                 conditionalPanel(condition = "input.clustering2 == 'yes'",plotOutput("Plot.2B.2"))))),
+                                 conditionalPanel(condition = "input.clustering2 == 'yes'",sliderInput("icc1.2B", "(E-1) ICC1:", value=0.01, min=0.01, max=0.35,step = 0.01)),
+                                 conditionalPanel(condition = "input.clustering2 == 'yes'",sliderInput("icc2.2B", "(E-2) ICC2:", value=0.01, min=0.01, max=0.35,step = 0.01)))),
+                          conditionalPanel(condition = "input.clustering2 == 'yes'",plotOutput("Plot.2B.1", height = "300px")),
+                          conditionalPanel(condition = "input.clustering2 == 'yes'",h4(""))),
                         mainPanel(
                           actionButton("goButton2", "Go!", class = "btn-primary"),
-                          h4(""),
-                          h4("Table 3.1. Probability of detecting a difference"),
-                          useShinyalert(),  # Set up shinyalert
-                          actionButton("btn3.1", "?"),
-                          tableOutput("Table.2.1"),
-                          conditionalPanel(condition = "input.clustering2 == 'yes'",h4("Table 3.2. Number of sampled fish per pen")),
-                          conditionalPanel(condition = "input.clustering2 == 'yes'",
-                                           useShinyalert(),  # Set up shinyalert
-                                           actionButton("btn3.2", "?")),
-                          conditionalPanel(condition = "input.clustering2 == 'yes'",tableOutput("Table.2.2")),
-                          plotOutput("Plot2"),
-                          h4("Figure 3. Distribution of abundance"),
-                          useShinyalert(),  # Set up shinyalert
-                          actionButton("btn3.2", "?")))),
+                          h1(""),
+                         conditionalPanel(condition = "input.clustering2 == 'no'",div(HTML("<b><u>Probability of determining Abundance1 lower than Abundance2</b></u>"))),
+                         conditionalPanel(condition = "input.clustering2 == 'yes'",div(HTML("<b><u>Probability of determining Abundance1 lower than Abundance2</b></u> and<i> (Number of sampled fish per pen)</i>"))),
+                         h1(""),
+                         htmlOutput("Table.2.1"),conditionalPanel(condition = "input.clustering2 == 'yes'",useShinyalert(), actionButton("btn3.2", "?")),
+                         h1(""),
+                         plotOutput("Plot.2B.5"), ##############################################################plotOutput("Plot2"), 
+                         useShinyalert(),  actionButton("btn3.3", "?")))),
              
              tabPanel(strong("Glossary"), 
                       fluidPage(
@@ -154,7 +121,7 @@ fluidPage(
                         strong("Farm: "),
                         p("A farm consists of a group of pens"),
                         strong("ICC (Intraclass correlation coefficient): "), 
-                        p("The degree of clustering of sea lice infections in fish within cages. High ICC means that abundance is highly different from pen to pen, while no ICC means that all pens in a farm have exactly same abundance."),
+                        p("The degree of clustering of sea lice infections in fish within cages. High ICC means that abundance is highly different from pen to pen, while no ICC means that all pens in a farm have exactly same abundance. Maximum ICC that you can choose in this application depends on the abundance that you assume."),
                         strong("Iteration: "),
                         p("How many times the model is simulated to generate the output. Higher number of iterations can generate more accurate estimation, but takes longer time of simulation."),
                         strong("Pen:"),

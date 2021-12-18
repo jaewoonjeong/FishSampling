@@ -1,10 +1,13 @@
-function(input, output,session){
+server <-function(input, output,session){
+  observeEvent(input$go1, {screenshot()})
+  observeEvent(input$go2, {screenshot()})
+  observeEvent(input$go3, {screenshot()})
   observeEvent(input$btn1.2,{shinyalert(text = "The underlined numbers are the probabilities of output, and the numbers in brackets are 'Number of sampled fish per pen'. The product of 'Number of sampled fish per pen' and 'Number of sampled pens' is 'Total number of sampled fish'. The products of 'Number of sampled pen' and 'Number of sampled fish per pen' may be different to 'Number of total sampled fish' due to a rounding issue.", type = "info")})
   observeEvent(input$btn1.3,{shinyalert(text = "Probability of corresponding to the region of density plot between the two green vertical lines. The black and green lines represent abundance and lower and upper limits, respectively", type = "info")})
   observeEvent(input$btn2.2,{shinyalert(text = "The underlined numbers are the probabilities of output, and the numbers in brackets are 'Number of sampled fish per pen'. The product of 'Number of sampled fish per pen' and 'Number of sampled pens' is 'Total number of sampled fish'. The products of 'Number of sampled pen' and 'Number of sampled fish per pen' may be different to 'Number of total sampled fish' due to a rounding issue.", type = "info")})
   observeEvent(input$btn2.3,{shinyalert(text = "The probability corresponds to the right region to the red line. The black and red lines represent abundance and the certain level of abundance, respectively", type = "info")})
   observeEvent(input$btn3.2,{shinyalert(text = "The underlined numbers are the probabilities of output, and the numbers in brackets are 'Number of sampled fish per pen'. The product of 'Number of sampled fish per pen' and 'Number of sampled pens' is 'Total number of sampled fish'. The products of 'Number of sampled pen' and 'Number of sampled fish per pen' may be different to 'Number of total sampled fish' due to a rounding issue.", type = "info")})
-  observeEvent(input$btn3.3,{shinyalert(text = "The probability corresponds to the LEFT region of density plot to the BLUE vertical line. Vertical blue lines represent the equally estimated two abundances", type = "info")})
+  observeEvent(input$btn3.3,{shinyalert(text = "The probability corresponds to the RIGHT region of density plot to the BLUE vertical line. Vertical blue lines represent the equally estimated two abundances", type = "info")})
   
   extract <- function(text) {text <- gsub(" ", "", text); split <- strsplit(text, ",", fixed = FALSE)[[1]]; as.numeric(split)}
   
@@ -12,7 +15,7 @@ function(input, output,session){
   fish=2000 # number of fish per pen
  #######################  SCENARIO 1
   observe(updateSliderInput(session, "icc1", max = ifelse(as.numeric(input$ab1)<=0.4,floor(as.numeric(input$ab1)*(3/10)*100)/100,floor(((as.numeric(input$ab1)/150)^(1/3))*100)/100)))
-  observe(updateSelectInput(session, "choice1", choices=1:as.numeric(input$pen1),selected=c(3,10)))
+  observe(updateSelectInput(session, "choice1", choices=1:as.numeric(input$pen1),selected=c(3,5,10)))
   
   mydata1<-reactive({if(input$clustering1=='no'){TotalSampleSize=as.numeric(input$TSS1)
   withProgress(message = 'Progress time',value = 0,{N<-10
@@ -59,7 +62,7 @@ function(input, output,session){
   
   plo.1B.2<-eventReactive(input$goButton1, {results1<-mydata1()
   if(input$clustering1=='yes'){
-    plot(x=1:length(results1$d),y=results1$d[sample(1:length(results1$d),length(results1$d))],las=1,xlab="Pen number",ylab="Abundance",main=c("Example abundance of each pen","with the supposed ICC"))
+    plot(x=1:length(results1$d),y=results1$d[sample(1:length(results1$d),length(results1$d))],las=1,xlab="Pen number",ylab="Abundance"); mtext(c("Example abundance of each pen","with the supposed ICC"),side=3,line=c(1.5,0.5))
     abline(h=input$ab1,col='gray',lty=2)}})
   output$Plot.1B.2<-renderPlot({plo.1B.2()})
   
@@ -111,7 +114,7 @@ function(input, output,session){
         column_spec(seq(2,length(as.numeric(input$TSS1))*2,2),background='#EEEEEE',underline=T,bold = T, border_left = T) %>%
         column_spec(seq(3,(length(as.numeric(input$TSS1))*2+1),2),background='#EEEEEE', italic = T,border_right = T) %>%
         kable_styling(font_size = 14)%>%kable_paper() %>%
-        add_header_above(c("","Total number of sampled fish"=length(as.numeric(input$TSS1))*2),border_left=T,border_right = T)
+        add_header_above(c("","Total number of sampled fish"=length(as.numeric(input$TSS1))*2),border_left=T,border_right = T,align = "l")
       }
   })
   output$Table.1.1 <- renderText({dataset.1()})
@@ -119,7 +122,7 @@ function(input, output,session){
   ################################################## Scenario 2
   observe(updateSliderInput(session, "icc1.2B", max = ifelse(as.numeric(input$ab1.2B)<=0.4,floor(as.numeric(input$ab1.2B)*(3/10)*100)/100,floor(((as.numeric(input$ab1.2B)/150)^(1/3))*100)/100)))
   observe(updateSliderInput(session, "icc2.2B", max = ifelse(as.numeric(input$ab2.2B)<=0.4,floor(as.numeric(input$ab2.2B)*(3/10)*100)/100,floor(((as.numeric(input$ab2.2B)/150)^(1/3))*100)/100)))
-  observe(updateSelectInput(session, "choice2", choices=1:as.numeric(input$pen2),selected=c(3,10)))
+  observe(updateSelectInput(session, "choice2", choices=1:as.numeric(input$pen2),selected=c(3,5,10)))
   
   mydata2<-reactive({
     if(input$clustering2=='no'){pen.AB=c(input$ab1.2B,input$ab2.2B)
@@ -209,14 +212,14 @@ function(input, output,session){
   plo.2B.5<-eventReactive(input$goButton2, {results2<-mydata2()
   if(input$clustering2=='no'){
     df=melt(results2$k); df[,1]=as.factor(as.numeric(input$TSS2)[df[,1]])
-    colnames(df)=c("NumberOfTotalSampledFish","Iteration","Difference")
-    ggplot(df,aes(x=Difference,y=NumberOfTotalSampledFish))+geom_density_ridges()+geom_vline(xintercept=0,colour=c("blue"),lwd=1.5)+xlab("(Abundance 1) - (Abundance 2)")+ylab(ifelse(length(as.numeric(input$TSS2))==1,"Density","Total number of sampled fish"))+ggtitle("Distribution of difference between the two abundances")+
+    colnames(df)=c("NumberOfTotalSampledFish","Iteration","Difference"); df$Difference=-df$Difference
+    ggplot(df,aes(x=Difference,y=NumberOfTotalSampledFish))+geom_density_ridges()+geom_vline(xintercept=0,colour=c("blue"),lwd=1.5)+xlab("(Abundance 2) - (Abundance 1)")+ylab(ifelse(length(as.numeric(input$TSS2))==1,"Density","Total number of sampled fish"))+ggtitle("Distribution of difference between the two abundances")+
       theme(text=element_text(size=18))+
       theme(axis.text.x=element_text(face="bold",size=18),axis.text.y = element_text(face="bold",size=18))
   } else {
     df=melt(results2$e); df[,1]=as.factor(as.numeric(input$choice2)[df[,1]])  ;df[,2]=paste("Total number of sampled fish",as.factor(as.numeric(input$TSS2)[df[,2]]))
-    colnames(df)=c("NumberOfSampledPens","NumberOfTotalSampledFish","Iteration","Difference")
-    ggplot(df,aes(x=Difference,y=NumberOfSampledPens))+geom_density_ridges()+facet_wrap(~NumberOfTotalSampledFish)+ggtitle("Distribution of difference between the two abundances")+
+    colnames(df)=c("NumberOfSampledPens","NumberOfTotalSampledFish","Iteration","Difference"); df$Difference=-df$Difference
+    ggplot(df,aes(x=Difference,y=NumberOfSampledPens))+geom_density_ridges()+facet_wrap(~NumberOfTotalSampledFish)+ggtitle("Distribution of difference between the two abundances")+xlab("(Abundance 2) - (Abundance 1)")+
       geom_vline(xintercept=0,colour=c("blue"),lwd=1.5)+ylab(ifelse(length(as.numeric(input$choice2))==1,"Density","Number of sampled pens"))+
       theme(plot.title = element_text(size=16,face="bold"),text=element_text(size=15))+
       theme(legend.position="bottom",legend.title=element_text("Number of sampled pens",size=18,face="bold"))+
@@ -228,8 +231,8 @@ function(input, output,session){
   
   plo.2B.1<-eventReactive(input$goButton2, {results2<-mydata2()
   if(input$clustering2=='yes'){
-    matplot(x=1:length(results2$d),y=data.frame(results2$c[sample(1:length(results2$c),length(results2$c))],results2$d[sample(1:length(results2$d),length(results2$d))]),type='p',las=1,xlab="Pen number",ylab="Abundance",main=c("Example abundance of each pen","with the supposed values of ICC"))
-    title (sub=expression("Assumed TRUE Abundance 1 &" * phantom("2)")), col.sub = "black"); title (sub=expression(phantom("Assumed TRUE Abundance 1 &") * "2"), col.sub = "red")
+    matplot(x=1:length(results2$d),y=data.frame(results2$c[sample(1:length(results2$c),length(results2$c))],results2$d[sample(1:length(results2$d),length(results2$d))]),type='p',las=1,xlab="Pen number",ylab="Abundance"); mtext(c("Example abundance of each pen","with the supposed ICC"),side=3,line=c(1.5,0.5))
+    title (sub=expression("Assumed TRUE Abundance 1 &" * phantom(" Abundance 2")), col.sub = "black"); title (sub=expression(phantom("Assumed TRUE Abundance 1 &") * " Abundance 2"), col.sub = "red")
     abline(h=c(input$ab1.2B,input$ab2.2B),col=c('black','red'),lty=2)
   }})
   output$Plot.2B.1<-renderPlot({plo.2B.1()})
@@ -280,13 +283,13 @@ function(input, output,session){
       column_spec(seq(2,length(as.numeric(input$TSS2))*2,2),underline=T,background = '#EEEEEE',bold = T, border_left = T) %>%
       column_spec(seq(3,(length(as.numeric(input$TSS2))*2+1),2), italic = T,background = '#EEEEEE',border_right = T) %>%
       kable_styling(font_size = 14)%>%kable_paper() %>%
-      add_header_above(c("","Total number of sampled fish"=length(as.numeric(input$TSS2))*2),border_left=TRUE,border_right = TRUE)
+      add_header_above(c("","Total number of sampled fish"=length(as.numeric(input$TSS2))*2),border_left=TRUE,border_right = TRUE,align = "l")
     }
   })
   output$Table.2.1<-renderText({dataset.2()})
   ############################## Scenario 3
   observe(updateSliderInput(session, "icc3", max = ifelse(as.numeric(input$ab3)<=0.4,floor(as.numeric(input$ab3)*(3/10)*100)/100,floor(((as.numeric(input$ab3)/150)^(1/3))*100)/100)))
-  observe(updateSelectInput(session, "choice3", choices=1:as.numeric(input$pen3),selected=c(3,10)))
+  observe(updateSelectInput(session, "choice3", choices=1:as.numeric(input$pen3),selected=c(3,5,10)))
   
   mydata3<-reactive({if(input$clustering3=='no'){TotalSampleSize=as.numeric(input$TSS3)
   withProgress(message = 'Progress time',value = 0,{N<-10
@@ -336,7 +339,7 @@ function(input, output,session){
   
   plo.3B.2<-eventReactive(input$goButton3, {results3<-mydata3()
   if(input$clustering3=='yes'){
-    plot(x=1:length(results3$c),y=results3$c[sample(1:length(results3$c),length(results3$c))],las=1,xlab="Pen number",ylab="Abundance",main=c("Example abundance of each pen","with the supposed ICC"))
+    plot(x=1:length(results3$c),y=results3$c[sample(1:length(results3$c),length(results3$c))],las=1,xlab="Pen number",ylab="Abundance"); mtext(c("Example abundance of each pen","with the supposed ICC"),side=3,line=c(1.5,0.5))
     abline(h=input$ab3,col='gray',lty=2)}})
   output$Plot.3B.2<-renderPlot({plo.3B.2()})
   
@@ -386,7 +389,7 @@ function(input, output,session){
       column_spec(seq(2,length(as.numeric(input$TSS3))*2,2),underline=T,background = '#EEEEEE',bold = T, border_left = T) %>%
       column_spec(seq(3,(length(as.numeric(input$TSS3))*2+1),2), italic = T,background = '#EEEEEE',border_right = T) %>%
       kable_styling(font_size = 14)%>%kable_paper() %>%
-      add_header_above(c("","Total number of sampled fish"=length(as.numeric(input$TSS3))*2),border_left=TRUE,border_right = TRUE)
+      add_header_above(c("","Total number of sampled fish"=length(as.numeric(input$TSS3))*2),border_left=TRUE,border_right = TRUE,align = "l")
     }
   })
   output$Table.3.1 <- renderText({dataset.3()})

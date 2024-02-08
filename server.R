@@ -1,5 +1,4 @@
 function(input, output,session){
-  
   observeEvent(input$go1, {screenshot()})
   observeEvent(input$go2, {screenshot()})
   observeEvent(input$go3, {screenshot()})

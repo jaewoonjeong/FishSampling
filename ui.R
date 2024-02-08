@@ -1,5 +1,4 @@
 fluidPage(
-  img(src="FishSampling.png", height = 200/2, width = 715/2),
   navbarPage("",
              tabPanel(strong("HOME"),                      
                       p(""),

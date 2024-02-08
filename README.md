@@ -1,9 +1,15 @@
 # FishSampling
 
-An open web-based application to guide the determination of sampling approaches on salmon farms to accurately estimate sea louse abundance
+A web-based application guiding farmed salmon sampling to estimate sea louse abundance
 
-ABSTRACT:
-Sea lice infestation is a major threat both to salmon aquaculture, where the economic impact is devastating, and to wild salmonid conservation where increased parasitic burden may affect population viability. To manage these risks, active surveillance is routinely conducted on salmon farms to estimate the abundance of sea lice. However, the design of efficient sampling schemes for surveillance is challenging, as sampling strategies must consider infestation levels, farm structure, and management protocols, as well as the practical logistics of obtaining samples in remote and/or extreme locations. Simulation-based approaches can be a useful method to estimate appropriate sample sizes when a complex study design does not allow for the use of pre-established formulae. Here, we present an open web-based application, FishSampling, that has been designed for use in determining appropriate sample sizes under specific circumstances with a particular purpose. It can be used for three different sampling objectives, to estimate: i) the probability that an estimated abundance will fall within a given range, ii) the probability that the abundance will be incorrectly estimated relative to some lice limit, and, iii) the probability of correctly detecting a different between two abundance levels. The model that underpins this application considers sea lice abundance, the number of pens on a farm and the likely clustering effects among these pens, as well as the desired level of confidence. This approach, and the tool presented here, can be used across the salmon aquaculture sector to optimize sampling strategies and balance surveillance costs against health outcomes. The web-based application is freely available at https://jaewoonjeong.shinyapps.io/FishSampling/
+ABSTRACT
+Objective: Efficiently managing sea lice on salmon farms through active surveillance, crucial for lice abundance estimation, is challenging due to the need for effective sampling schemes. To address this, we developed an application that considers infestation levels, farm structure, and management protocols, enhancing the accuracy of sampling strategies for sea louse abundance estimation.
+Methods: Simulation-based methods are valuable for estimating suitable sample sizes in complex studies where standard formulae are inadequate. We introduce 'FishSampling,' an open web-based application tailored to determine precise sample sizes for specific scenarios and objectives.
+Result: The model incorporates factors like sea lice abundance, farm pen numbers, potential clustering effects among these pens, and the desired confidence level. Simulation outcomes emphasize the critical role of clustering considerations in sampling strategies.
+Conclusion: This approach can be used across the salmon aquaculture sector to optimize sampling strategies and balance surveillance costs against health outcomes. 
+
+Impact statement
+This open-source application enhances sea lice monitoring on salmon farms with a novel simulation-based approach for sample size determination. It offers accurate estimates of sea lice abundance, crucial for regulatory purposes, and aids in the efficient allocation of sampling resources.
 
 The necessary packages are shiny, shinyalert, kableExtra, shinyscreenshot, reshape, ggplot2, ggridges, ICC, and tibble.
 
